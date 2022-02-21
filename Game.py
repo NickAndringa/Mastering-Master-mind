@@ -22,7 +22,7 @@ class Mastermind():
     guesses = []
 
     # Constructor
-    def __init__(self, kleuren=['R', 'O', 'Y', 'G', 'C', 'B'], lengte=4, duplicates=True, max_guesses=10, simple=False, games=1, ai=False):
+    def __init__(self, kleuren=['R', 'O', 'Y', 'G', 'C', 'B'], lengte=4, duplicates=True, max_guesses=10, simple=False, games=1, ai=False, worst=False):
         self.kleuren = kleuren
         self.lengte = lengte
         self.duplicates = duplicates
@@ -30,6 +30,7 @@ class Mastermind():
         self.simple = simple
         self.games = games
         self.ai = ai
+        self.worst = worst
 
         # Reset de code, guesses, etc.
         self.reset()
@@ -182,31 +183,60 @@ class Mastermind():
         # Het spel gaat door tot de speler of de code goed heeft
         # of geen pogingen meer over heeft.
         if self.ai:
-            for _ in range(self.games):
-                while not gewonnen and no_guesses < self.max_guesses:
-                    guess = self.simple_strat()
+            if self.worst:
+                for _ in range(self.games):
+                    while not gewonnen and no_guesses < self.max_guesses:
+                        guess = self.worst_case_strategy()
 
-                    if self.code == guess:
-                        gewonnen = True
-                    else:
-                        feedback = self.geef_feedback(self.code, guess)
-                        self.guesses.append((guess, feedback))
+                        if self.code == guess:
+                            gewonnen = True
+                        else:
+                            feedback = self.geef_feedback(self.code, guess)
+                            self.guesses.append((guess, feedback))
 
-                        # Kijk op basis van de gekregen feedback wat de overgebleven
-                        # mogelijkheden zijn.
-                        self.potential = self.update_mogelijkheden()
+                            # Kijk op basis van de gekregen feedback wat de overgebleven
+                            # mogelijkheden zijn.
+                            self.potential = self.update_mogelijkheden()
 
-                    # Een poging gedaan
-                    no_guesses += 1
+                        no_guesses += 1
 
-                # results & gewonnen
-                self.reset()
-                gewonnen = False
-                results.append(no_guesses)
-                no_guesses = 0
 
-            # gemiddelde aantal guesses
-            print(sum(results) / self.games)
+                    # results & gewonnen
+                    self.reset()
+                    gewonnen = False
+                    results.append(no_guesses)
+                    no_guesses = 0
+
+                # gemiddelde aantal guesses
+                print(sum(results) / self.games)
+
+            elif self.simple:
+                for _ in range(self.games):
+                    while not gewonnen and no_guesses < self.max_guesses:
+                        guess = self.simple_strat()
+
+                        if self.code == guess:
+                            gewonnen = True
+                        else:
+                            feedback = self.geef_feedback(self.code, guess)
+                            self.guesses.append((guess, feedback))
+
+                            # Kijk op basis van de gekregen feedback wat de overgebleven
+                            # mogelijkheden zijn.
+                            self.potential = self.update_mogelijkheden()
+
+                        # Een poging gedaan
+                        no_guesses += 1
+
+
+                    # results & gewonnen
+                    self.reset()
+                    gewonnen = False
+                    results.append(no_guesses)
+                    no_guesses = 0
+
+                # gemiddelde aantal guesses
+                print(sum(results) / self.games)
 
         else:
             while not gewonnen and no_guesses < self.max_guesses:
@@ -246,8 +276,41 @@ class Mastermind():
         # Zet een spelletje mastermind klaar
 
     def simple_strat(self):
+        # voert de simpele strategie uit
         guess = self.potential[0]
 
+        return guess
+
+        #functie die de "worst case" opzoekt
+    def get_worst_guess(self):
+        (last_guess, feedback) = self.guesses[-1]
+
+        feedback_and_occurences = {}
+
+        for answer in self.potential:
+            feedback = self.geef_feedback(last_guess, answer)
+
+            feedback = str(feedback)
+            try:
+                feedback_and_occurences[feedback] = feedback_and_occurences[feedback] + 1
+
+            except KeyError:
+                feedback_and_occurences[feedback] = 1
+
+        worst_case_feedback = max(feedback_and_occurences, key=feedback_and_occurences.get)
+
+        for i, possible in enumerate(self.potential):
+
+            if worst_case_feedback == str(self.geef_feedback(last_guess, possible)):
+                return possible
+        return False
+
+
+    def worst_case_strategy(self):
+        if len(self.guesses) < 1:
+            guess = self.potential[8]
+        else:
+            guess = self.get_worst_guess()
         return guess
 
 
@@ -256,9 +319,10 @@ game = Mastermind(
     lengte=4,
     duplicates=True,
     max_guesses=10,
-    simple=True,
+    simple=False,
     games=1000,
-    ai=False,
+    ai=True,
+    worst=True
 )
 
 # Start een nieuwe ronde
