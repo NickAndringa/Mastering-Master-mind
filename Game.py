@@ -287,6 +287,7 @@ class Mastermind():
 
         feedback_and_occurences = {}
 
+        #roept benodigde feedback op
         for answer in self.potential:
             feedback = self.geef_feedback(last_guess, answer)
 
@@ -297,6 +298,7 @@ class Mastermind():
             except KeyError:
                 feedback_and_occurences[feedback] = 1
 
+        #roept de "worst_case" op, en pakt hier de feedback van
         worst_case_feedback = max(feedback_and_occurences, key=feedback_and_occurences.get)
 
         for i, possible in enumerate(self.potential):
@@ -305,15 +307,15 @@ class Mastermind():
                 return possible
         return False
 
-
+    # functie voor de "worst case strategy"
     def worst_case_strategy(self):
         if len(self.guesses) < 1:
-            guess = self.potential[8]
+            guess = self.potential[200]
         else:
             guess = self.get_worst_guess()
         return guess
 
-
+# game regels
 game = Mastermind(
     kleuren=['R', 'O', 'Y', 'G', 'C', 'B'],
     lengte=4,
